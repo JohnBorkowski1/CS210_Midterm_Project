@@ -1,65 +1,124 @@
+#include <chrono>
 #include <iostream>
 #include <string>
-#include "school.h"
-#include "schoolList.h"
+#include "School.h"
+#include "SchoolList.h"
 #include "CSVReader.h"
+#include "SchoolBST.h"
+#include "SchoolHashTable.h"
 
 using namespace std;
 
-void loadCSV(SchoolList &schoolList, const string &filename) {
-    vector<vector<string>> data = CSVReader::readCSV(filename);
+std::vector<School> loadSchoolsFromCSV(const std::string& filename) {
+    std::vector<School> schools;
+    std::ifstream file(filename);
+    std::string line, name, address, city, state, county;
 
-    if (data.empty()) {
-        cerr << "Error CSV file is empty or could not be read\n";
-        return;
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return {};
     }
 
-    for (size_t i = 1; i < data.size(); i++) {
-        if (data[i].size() < 5) continue;
-        schoolList.insertLast(data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]);
+    std::getline(file, line);
+
+    int lineCount = 0;
+
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::getline(ss, name, ',');
+        std::getline(ss, address, ',');
+        std::getline(ss, city, ',');
+        std::getline(ss, state, ',');
+        std::getline(ss, county, ',');
+
+        if (!name.empty()) {
+            schools.emplace_back(name, address, city, state, county);
+            lineCount++;
+        }
     }
 
-    cout << "CSV file loaded\n";
+    std::cout << "Total parsed schools: " << lineCount << std::endl;
+    return schools;
+}
+
+template<typename Func>
+long long timeFunction(Func f) {
+    auto start = std::chrono::high_resolution_clock::now();
+    f();
+    auto end = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 }
 
 int main() {
-    SchoolList schoolList;
-    string filename = "schools.csv";
-    loadCSV(schoolList, filename);
+    std::string filename = "C:/Users/johnb/CLionProjects/MidtermProject/USA_Schools.csv";
+    std::vector<School> schools = loadSchoolsFromCSV(filename);
+    std::cout << "Loaded " << schools.size() << " schools.\n";
 
-    int choice;
-    string name;
 
-    do {
-        cout << "1. Search for a school\n";
-        cout << "2. Delete a school\n";
-        cout << "3. Display all schools\n";
-        cout << "4. Exit\n";
-        cout << "Choose one: ";
-        cin >> choice;
-        cin.ignore();
 
-        switch (choice) {
-            case 1:
-                cout << "Enter the school name to search: ";
-            getline(cin, name);
-            schoolList.findByName(name);
-            break;
-            case 2:
-                cout << "Enter the school name to delete: ";
-            getline(cin, name);
-            schoolList.deleteByName(name);
-            break;
-            case 3:
-                schoolList.display();
-            break;
-            case 4:
-                cout << "Bye Bye\n";
-            break;
-            default:
-                cout << "Invalid choice\n";
+
+    SchoolList ll;
+    SchoolBST bst;
+    SchoolHashTable ht;
+
+    auto llInsertTime = timeFunction([&]() {
+        for (auto& s : schools) ll.insert(s);
+    });
+
+    auto bstInsertTime = timeFunction([&]() {
+        for (auto& s : schools) bst.insert(s);
+    });
+
+    auto htInsertTime = timeFunction([&]() {
+        for (auto& s : schools) ht.insert(s);
+    });
+
+    std::cout << "Insertion Times (µs):\n";
+    std::cout << "Linked List: " << llInsertTime << "\n";
+    std::cout << "BST: " << bstInsertTime << "\n";
+    std::cout << "Hash Table: " << htInsertTime << "\n";
+
+    int searchCount = std::min(100, (int)schools.size());
+    auto llSearchTime = timeFunction([&]() {
+        for (int i = 0; i < searchCount; i++) ll.findByName(schools[i].name);
+    });
+
+    auto bstSearchTime = timeFunction([&]() {
+        for (int i = 0; i < searchCount; i++) bst.findByName(schools[i].name);
+    });
+
+    auto htSearchTime = timeFunction([&]() {
+        for (int i = 0; i < searchCount; i++) ht.findByName(schools[i].name);
+    });
+
+    std::cout << "\nSearch Times (µs) for " << searchCount << " records:\n";
+    std::cout << "Linked List: " << llSearchTime << "\n";
+    std::cout << "BST: " << bstSearchTime << "\n";
+    std::cout << "Hash Table: " << htSearchTime << "\n";
+
+
+    auto llDeleteTime = timeFunction([&]() {
+    for (int i = 0; i < searchCount; i++) {
+        ll.deleteByName(schools[i].name);
+    }
+});
+
+    auto bstDeleteTime = timeFunction([&]() {
+        for (int i = 0; i < searchCount; i++) {
+            bst.deleteByName(schools[i].name);
         }
-    } while (choice != 4);
+    });
+
+    auto htDeleteTime = timeFunction([&]() {
+        for (int i = 0; i < searchCount; i++) {
+            ht.deleteByName(schools[i].name);
+        }
+    });
+
+    std::cout << "\nDeletion Times (µs) for " << searchCount << " records:\n";
+    std::cout << "Linked List: " << llDeleteTime << "\n";
+    std::cout << "BST: " << bstDeleteTime << "\n";
+    std::cout << "Hash Table: " << htDeleteTime << "\n";
 
     return 0;
 }
