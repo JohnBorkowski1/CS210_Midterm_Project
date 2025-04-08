@@ -5,14 +5,14 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "School.h"
+
 using namespace std;
 
 #ifndef SCHOOLBST_H
 #define SCHOOLBST_H
 
-struct School {
-    string name, address, city, state, county;
-};
+
 
 
 struct Node {
@@ -105,6 +105,7 @@ public:
     }
 
     void deleteByName(string name) { root = deleteByName(root, name); }
+
 };
 
 

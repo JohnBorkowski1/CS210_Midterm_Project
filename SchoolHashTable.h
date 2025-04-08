@@ -8,24 +8,11 @@
 #include <iostream>
 #include <vector>
 #include <list>
-
+#include "School.h";
 
 using namespace std;
 
-struct School {
-    string name;
-    string address;
-    string city;
-    string state;
-    string zip;
 
-    School(string n, string a, string c, string s, string z)
-        : name(n), address(a), city(c), state(s), zip(z) {}
-
-    void print() const {
-        cout << name << ", " << address << ", " << city << ", " << state << ", " << zip << endl;
-    };
-};
 
 class SchoolHashTable {
 private:
@@ -37,10 +24,13 @@ private:
     int hash(const string& name) {
         long long hashValue = 0;
         long long pPow = 1;
+
         for (char c : name) {
-            hashValue = (hashValue + (tolower(c) - 'a' + 1) * pPow) % mod;
+            int val = tolower(c);
+            hashValue = (hashValue + val * pPow) % mod;
             pPow = (pPow * p) % mod;
         }
+
         return static_cast<int>(hashValue % TABLE_SIZE);
     }
 
@@ -51,6 +41,9 @@ public:
 
     void insert(const School& school) {
         int index = hash(school.name);
+        for (const auto& existing : table[index]) {
+            if (existing.name == school.name) return;
+        }
         table[index].push_back(school);
     }
 

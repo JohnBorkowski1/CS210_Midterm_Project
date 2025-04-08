@@ -4,7 +4,7 @@
 
 
 #define SCHOOLLIST_H
-#include "school.h"
+#include "School.h"
 #include <iostream>
 #include <string>
 
@@ -15,6 +15,12 @@ private:
 
 public:
     SchoolList() : head(nullptr) {}
+
+    void insert(School s) {
+        School* newNode = new School(s);
+        newNode->next = head;
+        head = newNode;
+    }
 
     void insertFirst(std::string name, std::string address, std::string city, std::string state, std::string county) {
         School* newSchool = new School(name, address, city, state, county);
@@ -37,7 +43,7 @@ public:
 
     void deleteByName(std::string name) {
         if (!head) {
-            std::cout << "List is empty.\n";
+            std::cout << "List is empty.";
             return;
         }
         if (head->name == name) {
@@ -97,6 +103,7 @@ public:
             delete temp;
         }
     }
+
 };
 
 
